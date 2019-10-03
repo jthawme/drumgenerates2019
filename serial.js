@@ -1,5 +1,7 @@
 const SerialPort = require('serialport');
-const Readline = require('@serialport/parser-readline')
+const Readline = require('@serialport/parser-readline');
+
+let mainPort;
 
 function getArduinoPort() {
   return new Promise((resolve, reject) => {
@@ -18,14 +20,38 @@ function getArduinoPort() {
   });
 }
 
-function getSerialPort(portName, onData, baudRate = 9600) {
-  const port = new SerialPort(portName, { baudRate });
+function getSerialPort(portName, onData, onReady, baudRate = 9600) {
+  mainPort = new SerialPort(portName, { baudRate });
   const parser = new Readline();
-  port.pipe(parser);
 
-  parser.on('data', onData);
+  let ready = false;
 
-  return port;
+  mainPort.pipe(parser);
+  parser.on('data', data => {
+    if (!ready) {
+      ready = true;
+      onReady();
+    }
+    else {
+      onData(data);
+    }
+  });
+
+  return mainPort;
 }
 
-module.exports = { getArduinoPort, getSerialPort };
+function sendMessage(msg) {
+  if (!mainPort) {
+    console.log("No port set");
+  } else {
+    mainPort.write("<" + msg + ">" + "\n", (err) => {
+      if (err) {
+        console.error(err);
+      } else {
+        console.log("Sent message - " + msg);
+      }
+    });
+  }
+}
+
+module.exports = { getArduinoPort, getSerialPort, sendMessage };
