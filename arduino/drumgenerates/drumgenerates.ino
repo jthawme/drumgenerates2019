@@ -1,117 +1,59 @@
-#include <Adafruit_NeoPixel.h>
+#include <Button.h>
+#include <Servo.h>
 
-#define LED_PIN 6
-#define LED_COUNT 8
+#define PLAY_BTN 4
+#define DIR_BTN 5
 
-Adafruit_NeoPixel strip(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ800);
+Button btn = Button(4, true);
+Button btn2 = Button(5, true);
 
-const byte numChars = 32;
-char receivedChars[numChars];
-char tempChars[numChars];
+Servo myservo;
 
-boolean newData = false;
-
-// Set an array for catching all the times
-unsigned long times[] = { 0, 0, 0, 0, 0, 0, 0, 0 };
-
-// Set a color for each LED
-uint32_t colors[][3] = {
-  {255,0,0},
-  {0,255,0},
-  {0,0,255},
-  {255,0,0},
-  {0,255,0},
-  {0,0,255},
-  {255,0,0},
-  {0,255,0},
-};
-
-int interval = 150;
+boolean moving = false;
+boolean forward = true;
 
 void setup() {
   Serial.begin(9600);
-//  
-  strip.begin();
-  strip.show();
-  strip.setBrightness(50);
+
+  myservo.attach(9);
+  ledSetup();
   
   Serial.println("Ready");
+  myservo.write(90);
 }
 
 //============
 
 void loop() {
-    recvWithStartEndMarkers();
+  btn.update(onButtonStatechange);
+  btn2.update(onButtonStatechange);
+
+  if (moving) {
+    myservo.write(forward ? 95 : 85);
+  }
     
-    if (newData == true) {
-        strcpy(tempChars, receivedChars);
-        parseData();
-        newData = false;
-    }
+  updateLeds();
+}
 
-    unsigned long now = millis();
+//============
 
-    // Clears all LEDs first
-    strip.clear();
-
-    // Spins through all LEDs to check if there time is less than the interval
-    // and turns them on if so
-    for (int i = 0; i < LED_COUNT; i++) {
-      if (times[i] + interval > now) {
-        strip.setPixelColor(i, colors[i][0], colors[i][1], colors[i][2]);
+void onButtonStatechange(int pin, int eventType) {
+  Serial.print(pin);
+  Serial.print(", ");
+  Serial.println(eventType);
+  
+  switch (eventType) {
+    case Button::TAP:
+      if (pin == DIR_BTN) {
+        forward = !forward;
       }
-    }
+      if (pin == PLAY_BTN) {
+        moving = !moving;
 
-    strip.show();
-    delay(50);
-}
-
-//============
-
-void recvWithStartEndMarkers() {
-    static boolean recvInProgress = false;
-    static byte ndx = 0;
-    char startMarker = '<';
-    char endMarker = '>';
-    char rc;
-
-    while (Serial.available() > 0 && newData == false) {
-        rc = Serial.read();
-
-        if (recvInProgress == true) {
-            if (rc != endMarker) {
-                receivedChars[ndx] = rc;
-                ndx++;
-                if (ndx >= numChars) {
-                    ndx = numChars - 1;
-                }
-            }
-            else {
-                receivedChars[ndx] = '\0'; // terminate the string
-                recvInProgress = false;
-                ndx = 0;
-                newData = true;
-            }
+        if (!moving) {
+          myservo.write(90);
         }
-
-        else if (rc == startMarker) {
-            recvInProgress = true;
-        }
-    }
-}
-
-//============
-
-void parseData() {
-    char * strtokIndx;
-
-    strtokIndx = strtok(tempChars,",");
-
-    while (strtokIndx != NULL) {
-      int val = atoi(strtokIndx);
-      strtokIndx = strtok(NULL,",");
-      
-      times[val] = millis();
-    }
-    strip.show();
+      }
+      break;
+  }
 }
