@@ -4,6 +4,8 @@ function getInput() {
   return new Promise((resolve, reject) => {
     const inputs = easymidi.getInputs();
 
+    console.log(inputs);
+
     const filterInput = v => {
       return v;
     };

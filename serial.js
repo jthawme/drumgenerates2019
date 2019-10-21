@@ -1,6 +1,8 @@
 const SerialPort = require('serialport');
 const Readline = require('@serialport/parser-readline');
 
+const { EVENT_MESSAGES, log } = require('./constants');
+
 let mainPort;
 
 function getArduinoPort() {
@@ -42,13 +44,13 @@ function getSerialPort(portName, onData, onReady, baudRate = 9600) {
 
 function sendMessage(msg) {
   if (!mainPort) {
-    console.log("No port set");
+    log("No port set", EVENT_MESSAGES.ERROR);
   } else {
     mainPort.write("<" + msg + ">" + "\n", (err) => {
       if (err) {
-        console.error(err);
+        log(err, EVENT_MESSAGES.ERROR);
       } else {
-        console.log("Sent message - " + msg);
+        log(`Sent message (${ msg })`, EVENT_MESSAGES.SERIAL);
       }
     });
   }

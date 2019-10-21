@@ -1,9 +1,10 @@
+const { EVENT_MESSAGES, log } = require('./constants');
 const { getArduinoPort, getSerialPort, sendMessage } = require('./serial');
 const { getInput, getOutput, setMidiEventListeners, validateKey } = require('./midi');
 
 
 // Tracks all the midi notes
-const KEYS = [60,62,64,65,67,69,71,72];
+const KEYS = [48,50,52,53,55,57,59,60,62,64,65,67];
 
 
 // Array to store the keys to play
@@ -25,15 +26,15 @@ function onNoteOn({ channel, note, velocity}) {
 }
 
 
-
+// Callback for receiving serial data
 function onSerialData(data) {
-  console.log("here", data);
+  log(data, EVENT_MESSAGES.SERIAL);
 }
 
 
 // Method callback for when the arduino tells us its ready
 function onSerialReady(input) {
-  console.log("Port open and ready");
+  log("Port open and ready", EVENT_MESSAGES.SERIAL);
 
   setMidiEventListeners(input, {
     noteon: onNoteOn
@@ -52,6 +53,9 @@ Promise.all([
       () => onSerialReady(input)
     );
 
+    // Send an alive signal
+    sendMessage('99');
+
     // Start a loop to throttle sending the notes
     setInterval(() => {
       if (notes.length) {
@@ -59,4 +63,7 @@ Promise.all([
         notes = [];
       }
     }, 50);
-  });
+
+    log("Node / Midi / Serial comms ready");
+  })
+  .catch(err => log(err, EVENT_MESSAGES.ERROR))
