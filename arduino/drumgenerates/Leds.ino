@@ -4,6 +4,7 @@
 #define LED_COUNT 12
 #define LED_ON_TIME 100
 #define ALIVE_NUM 99
+#define START_NUM 98
 
 Adafruit_NeoPixel strip(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ800);
 
@@ -90,6 +91,8 @@ void parseData() {
 
       if (val < LED_COUNT) {
         times[val] = millis();
+      } else if (val == START_NUM) {
+        startMoving();
       } else if (val == ALIVE_NUM) {
         Serial.println("Alive");
       }

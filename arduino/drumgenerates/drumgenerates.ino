@@ -1,3 +1,6 @@
+#include <Chrono.h>
+#include <LightChrono.h>
+
 #include <Button.h>
 #include <Servo.h>
 
@@ -9,8 +12,12 @@ Button btn2 = Button(5, true);
 
 Servo myservo;
 
+Chrono timer;
+
 boolean moving = false;
 boolean forward = true;
+
+int speed = 2;
 
 void setup() {
   Serial.begin(9600);
@@ -29,18 +36,22 @@ void loop() {
   btn2.update(onButtonStatechange);
 
   if (moving) {
-    myservo.write(forward ? 95 : 85);
+    myservo.write(forward ? (90 + speed) : (90 - speed));
   }
     
   updateLeds();
+
+  if (timer.hasPassed(4500)) {
+    stopMoving();
+  }
 }
 
 //============
 
 void onButtonStatechange(int pin, int eventType) {
-  Serial.print(pin);
-  Serial.print(", ");
-  Serial.println(eventType);
+//  Serial.print(pin);
+//  Serial.print(", ");
+//  Serial.println(eventType);
   
   switch (eventType) {
     case Button::TAP:
@@ -48,12 +59,24 @@ void onButtonStatechange(int pin, int eventType) {
         forward = !forward;
       }
       if (pin == PLAY_BTN) {
-        moving = !moving;
-
         if (!moving) {
-          myservo.write(90);
+          startMoving();
+        } else {
+          stopMoving();
         }
       }
       break;
   }
+}
+
+void startMoving() {
+  moving = true;
+
+  timer.restart();
+}
+
+void stopMoving() {
+  myservo.write(90);
+  timer.stop();
+  moving = false;
 }
