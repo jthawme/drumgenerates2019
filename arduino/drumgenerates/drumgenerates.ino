@@ -17,7 +17,10 @@ Chrono timer;
 boolean moving = false;
 boolean forward = true;
 
-int speed = 2;
+int speed = 4;
+
+const int TOTAL_TIME = 2800;
+const int TOTAL_BACK_TIME = 2500;
 
 void setup() {
   Serial.begin(9600);
@@ -41,7 +44,7 @@ void loop() {
     
   updateLeds();
 
-  if (timer.hasPassed(4500)) {
+  if ((forward && timer.hasPassed(TOTAL_TIME)) || (!forward && timer.hasPassed(TOTAL_BACK_TIME))) {
     stopMoving();
   }
 }

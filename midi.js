@@ -1,10 +1,8 @@
-const easymidi = require('easymidi');
+const easymidi = require("easymidi");
 
 function getInput() {
   return new Promise((resolve, reject) => {
     const inputs = easymidi.getInputs();
-
-    console.log(inputs);
 
     const filterInput = v => {
       return v;
@@ -49,5 +47,8 @@ function validateKey(keys, note) {
 }
 
 module.exports = {
-  getInput, getOutput, setMidiEventListeners, validateKey
+  getInput,
+  getOutput,
+  setMidiEventListeners,
+  validateKey
 };
